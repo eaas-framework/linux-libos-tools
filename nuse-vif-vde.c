@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
+#include <libvdeplug.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -37,7 +38,7 @@ nuse_vif_vde_write(struct nuse_vif *vif, struct SimDevice *dev,
 	int sock = vif->sock;
 	// Sending the length information before each packet.
 	// This is expected by VDE and must not be omitted.
-	unsigned char bytes[2] vde_len;
+	unsigned char vde_len[2];
 	vde_len[0] = (len >> 8) & 0xFF;
 	vde_len[1] = (len) & 0xFF;
 	int ret1 = host_write(sock, vde_len, 2);
@@ -48,15 +49,16 @@ nuse_vif_vde_write(struct nuse_vif *vif, struct SimDevice *dev,
 }
 
 void *
-nuse_vif_vde_create(const char *pipepath)
+nuse_vif_vde_create(const char *vdepath)
 {
 	// TODO: Implement for vde, e.g. is pipe.
 	// maybe work with vdelib here.
 
-	// int sock;
-	// struct nuse_vif *vif;
+	int sock;
+	struct nuse_vif *vif;
 
-	// sock = named_pipe_alloc(pipepath);
+	// Create VDE-connection
+	// sock = ;
 	// if (sock < 0) {
 	// 	printf ("failed to create named pipe \"%s\"\n", pipepath);
 	// 	return NULL;
