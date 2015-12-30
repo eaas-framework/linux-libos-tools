@@ -16,10 +16,6 @@ nuse_vif_vde_read(struct nuse_vif *vif, struct SimDevice *dev)
 	ssize_t size;
 
 	while (1) {
-		// I'm not sure if I got this right, but it seems like this call
-		// is only getting the size, the memcp command is executed in 
-		// nuse_dev_rx. This means we need to lower the size value by
-		// 2 and also apply a offset of 2.
 		size = host_read(sock, buf, sizeof(buf));
 		if (size < 0) {
 			perror("read");
@@ -29,8 +25,8 @@ nuse_vif_vde_read(struct nuse_vif *vif, struct SimDevice *dev)
 			host_close(sock);
 			return;
 		}
-		// TODO: change size and buf(offset) accordingly.
-		nuse_dev_rx(dev, buf, size);
+		// Cutting the VDE length information (2 Byte at start)
+		nuse_dev_rx(dev, buf + 2, size - 2);
 	}
 }
 
@@ -39,12 +35,15 @@ nuse_vif_vde_write(struct nuse_vif *vif, struct SimDevice *dev,
 		    unsigned char *data, int len)
 {
 	int sock = vif->sock;
-	// TODO:
-	//unsigned char vde_data = padding + data
-	//int vde_len = len + 2 Byte
-	int ret = host_write(sock, data, len);
+	// Sending the length information before each packet.
+	// This is expected by VDE and must not be omitted.
+	unsigned char bytes[2] vde_len;
+	vde_len[0] = (len >> 8) & 0xFF;
+	vde_len[1] = (len) & 0xFF;
+	int ret1 = host_write(sock, vde_len, 2);
+	int ret2 = host_write(sock, data, len);
 
-	if (ret == -1)
+	if (ret1 == -1 || ret2 = -1)
 		perror ("write");
 }
 
